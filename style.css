@@ -111,7 +111,7 @@ h2 {
     top: 163px; /* Distance from the top */
     right: 10px; /* Distance from the right */
     width: 240px; /* Keep width the same */
-    height: 300px; /* Increase the height */
+    height: 330px; /* Increase the height */
     background: transparent;
     border-radius: 30px; /* Optional: Rounded corners */
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); /* Optional: Shadow effect */
@@ -122,7 +122,8 @@ h2 {
 /* Ensure the chart fits the container */
 #agePieChart {
     width: 100% !important;
-    height: 80% !important;
+    height: 75% !important;
+    padding-bottom: 15px;
 }
 
 
@@ -222,6 +223,46 @@ h2 {
     height: 500px !important; /* Adjust height as needed */
     display: block;
 }
+
+/* Gender Filter Buttons */
+#genderFilter {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
+#genderFilter button {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 14px;
+    transition: background 0.3s, box-shadow 0.3s;
+}
+
+#genderFilter button:hover {
+    background: #0056b3;
+}
+
+#genderFilter button.active {
+    box-shadow: 0px 0px 10px 3px rgba(0, 0, 0, 0.5); /* Dark shadow */
+    background: #0056b3; /* Darker background */
+    font-weight: bold;
+}
+
+#selectedAgeGroupMessage {
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    margin-top: 10px;
+}
+
+
+
 
 
 

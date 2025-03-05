@@ -1,7 +1,9 @@
 let chartInstance = null;
 let storedTestIDs = []; // Store all unique ID_test values from test_measure.csv
 let filteredChartInstance = null; // Store the chart instance
-
+let currentGender = null; // Stores the selected gender filter
+window.originalRows = []; // Store all data for filtering
+window.header = [];
 
 async function loadTestMeasureIDs() {
     try {
@@ -12,6 +14,7 @@ async function loadTestMeasureIDs() {
 
         const rows = data.trim().split("\n").map(row => row.split(","));
         const header = rows.shift();
+
 
         const idTestIndex = header.indexOf("ID_test");
 
@@ -40,7 +43,14 @@ async function loadData() {
         const ageIndex = header.indexOf("Age");
         const weightIndex = header.indexOf("Weight");
         const heightIndex = header.indexOf("Height");
+        const sexIndex = header.indexOf("Sex");
         const idIndex = header.indexOf("ID");
+
+        window.originalRows = rows;
+        window.header = header;
+
+        // Apply filters after loading data
+        applyFilters();
 
 
         // Categorize participants into age groups
@@ -56,6 +66,7 @@ async function loadData() {
             const userID = row[idIndex]?.trim(); // Ensure ID is a string & not undefined
             const weight = parseFloat(row[weightIndex]);
             const height = parseFloat(row[heightIndex]);
+
 
 
             let group;
@@ -105,6 +116,9 @@ function renderChart(labels, data, tooltips, ageGroups) {
         chartInstance.destroy();
     }
 
+    let originalColors = ["#FF6384", "#36A2EB", "#FFCE56", "#4CAF50"]; // Original colors
+
+
     // Create the chart
     chartInstance = new Chart(ctx, {
         type: "pie",
@@ -112,7 +126,7 @@ function renderChart(labels, data, tooltips, ageGroups) {
             labels: labels,
             datasets: [{
                 data: data,
-                backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4CAF50"],
+                backgroundColor: [...originalColors], // Use original colors
                 hoverOffset: 10
             }]
         },
@@ -132,6 +146,15 @@ function renderChart(labels, data, tooltips, ageGroups) {
                 if (elements.length > 0) {
                     const index = elements[0].index; // Get the clicked slice index
                     const selectedAgeGroup = labels[index]; // Get the age group
+
+                    chartInstance.data.datasets[0].backgroundColor = originalColors.map((color, i) =>
+                        i === index ? shadeColor(color, -20) : color
+                    );
+
+                    chartInstance.update(); // Redraw chart with new colors
+
+                    // ✅ Update message text
+
 
 
 
@@ -311,6 +334,8 @@ function renderFilteredChart(time, avgHR, avgSpeed) {
                     backgroundColor: "rgba(255, 87, 51, 0.2)",
                     borderWidth: 2,
                     pointRadius: 1,
+                    hoverRadius: 5, // ✅ Make points larger when hovered
+
                     fill: false
                 },
                 {
@@ -320,6 +345,8 @@ function renderFilteredChart(time, avgHR, avgSpeed) {
                     backgroundColor: "rgba(51, 255, 87, 0.2)",
                     borderWidth: 2,
                     pointRadius: 1,
+                    hoverRadius: 5, // ✅ Make points larger when hovered
+
                     fill: false
                 }
             ]
@@ -354,13 +381,107 @@ function renderFilteredChart(time, avgHR, avgSpeed) {
                             size: 16
                         }
                     }
+                },
+                tooltip: {
+                    enabled: true, // ✅ Ensure tooltips work
+                    intersect: false // ✅ Allow hovering between points
                 }
+            },
+            hover: {
+                intersect: false // ✅ Prevent hover only working on one dataset
             }
         }
     });
 
     console.log("✅ Chart Successfully Rendered!");
 }
+
+
+
+
+
+
+
+function applyFilters() {
+    if (!window.originalRows) return;
+
+    // ✅ Categorize participants into age groups
+    const ageGroups = {
+        "10-18": { count: 0, totalWeight: 0, totalHeight: 0, ids: [] },
+        "18-30": { count: 0, totalWeight: 0, totalHeight: 0, ids: [] },
+        "30-45": { count: 0, totalWeight: 0, totalHeight: 0, ids: [] },
+        "45-63": { count: 0, totalWeight: 0, totalHeight: 0, ids: [] },
+    };
+
+    window.originalRows.forEach(row => {
+        const age = parseFloat(row[window.header.indexOf("Age")]);
+        const weight = parseFloat(row[window.header.indexOf("Weight")]);
+        const height = parseFloat(row[window.header.indexOf("Height")]);
+        const sex = parseInt(row[window.header.indexOf("Sex")]); // Gender column
+        const userID = row[window.header.indexOf("ID")];
+
+        // ✅ First, categorize by age
+        let group = null;
+        if (age >= 10 && age < 18) group = "10-18";
+        else if (age >= 18 && age < 30) group = "18-30";
+        else if (age >= 30 && age < 45) group = "30-45";
+        else if (age >= 45 && age <= 63) group = "45-63";
+
+        // ✅ Second, apply gender filter AFTER age filter
+        if (group && (currentGender === null || sex === currentGender)) {
+            ageGroups[group].count++;
+            ageGroups[group].totalWeight += weight;
+            ageGroups[group].totalHeight += height;
+            ageGroups[group].ids.push(userID);
+        }
+    });
+
+    // ✅ Compute averages
+    const labels = Object.keys(ageGroups);
+    const dataValues = labels.map(group => ageGroups[group].count);
+    const avgStats = labels.map(group => {
+        const { count, totalWeight, totalHeight } = ageGroups[group];
+        return count > 0
+            ? `Avg Weight: ${(totalWeight / count).toFixed(1)} kg\nAvg Height: ${(totalHeight / count).toFixed(1)} cm`
+            : "No Data";
+    });
+
+    // ✅ Render the updated chart
+    renderChart(labels, dataValues, avgStats, ageGroups);
+}
+
+function filterByGender(gender) {
+    currentGender = gender;
+    applyFilters();
+    // ✅ Remove 'active' class from all buttons
+    document.querySelectorAll("#genderFilter button").forEach(btn => btn.classList.remove("active"));
+
+    // ✅ Add 'active' class to the selected button
+    if (gender === null) {
+        document.querySelector("#genderFilter button:nth-child(1)").classList.add("active"); // "All"
+    } else if (gender === 0) {
+        document.querySelector("#genderFilter button:nth-child(2)").classList.add("active"); // "Men"
+    } else if (gender === 1) {
+        document.querySelector("#genderFilter button:nth-child(3)").classList.add("active"); // "Women"
+    }
+}
+
+
+// ???
+function shadeColor(color, percent) {
+    let f = parseInt(color.slice(1), 16),
+        t = percent < 0 ? 0 : 255,
+        p = Math.abs(percent) / 80, // 🔥 Increase darkening effect slightly
+        R = f >> 16,
+        G = (f >> 8) & 0x00FF,
+        B = f & 0x0000FF;
+    return `rgb(${Math.round((t - R) * p + R)}, ${Math.round((t - G) * p + G)}, ${Math.round((t - B) * p + B)})`;
+}
+
+
+
+
+
 
 
 document.getElementById("toggleTableBtn").addEventListener("click", function() {
@@ -394,6 +515,8 @@ window.addEventListener("scroll", function () {
 window.onload = async function() {
     await loadTestMeasureIDs(); // Load all `ID_test` values from `test_measure.csv`
     await loadData(); // Load and process `subject-info.csv`
+    applyFilters(); // Apply age and gender filters
+
 };
 
 
