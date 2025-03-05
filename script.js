@@ -219,7 +219,7 @@ async function filterAndDisplayTable(ageGroup, matchingIDs) {
         }
 
         // ✅ Display the first 20 matching rows
-        const displayedRows = filteredRows.slice(0, 20);
+        const displayedRows = filteredRows.slice(0, 40);
 
         let tableHTML = "<table border='1'><thead><tr>";
         tableHTML += header.map(col => `<th>${col}</th>`).join("");
