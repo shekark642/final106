@@ -489,11 +489,11 @@ document.getElementById("toggleTableBtn").addEventListener("click", function() {
     if (sidebar.style.left === "0px") {
         sidebar.style.left = "-300px"; // Hide sidebar
         this.style.left = "10px"; // Move button back to original position
-        this.textContent = "Expand Table";
+        this.textContent = "Expand Data";
     } else {
         sidebar.style.left = "0px"; // Show sidebar
         this.style.left = "320px"; // Move button to the right so it's visible
-        this.textContent = "Collapse Table";
+        this.textContent = "Collapse Data";
     }
 });
 
