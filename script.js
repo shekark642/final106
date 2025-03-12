@@ -1,6 +1,8 @@
 let chartInstance = null;
 let storedTestIDs = []; // Store all unique ID_test values from test_measure.csv
 let filteredChartInstance = null; // Store the chart instance
+let filteredChartInstance2 = null; // Store the chart instance
+
 let currentGender = null; // Stores the selected gender filter
 window.originalRows = []; // Store all data for filtering
 window.header = [];
@@ -186,40 +188,40 @@ function renderChart(labels, data, tooltips, ageGroups) {
 
 async function filterAndDisplayTable(ageGroup, matchingIDs) {
     try {
-        console.log(`📥 Fetching test_measure.csv for ${ageGroup}...`);
         const response = await fetch("test_measure.csv");
         if (!response.ok) throw new Error("❌ Failed to load test_measure.csv");
 
         const data = await response.text();
         const rows = data.trim().split("\n").map(line => line.split(",").map(cell => cell.trim()));
-        console.log("📊 Full Data (First 5 Rows):", rows.slice(0, 5));
 
         const header = rows.shift(); // Remove header row
-        console.log("✅ test_measure.csv Loaded!");
-        console.log("🔹 CSV Headers:", header);
 
 
 
 
 
 
-
-
-        const idTestIndex = header.indexOf("ID");
         const timeIndex = header.indexOf("time");
-        const hrIndex = header.indexOf("HR");  
-        const vo2Index = header.indexOf("VO2"); 
-        const speedIndex = header.indexOf("Speed"); 
+        const idTestIndex = header.indexOf("ID");
+        const speedIndex = header.indexOf("Speed");
+        const hrIndex = header.indexOf("HR");
+        const vo2Index = header.indexOf("VO2");
+        const vco2Index = header.indexOf("VCO2");
+        const rrIndex = header.indexOf("RR");
+        const veIndex = header.indexOf("VE");
+
+
 
         if (idTestIndex === -1) throw new Error("❌ 'ID_test' column missing in test_measure.csv");
 
+
+
+
         // 🔍 Log sample `ID_test` values from `test_measure.csv`
         const sampleTestIDs = rows.slice(0, 10).map(row => row[idTestIndex]);
-        console.log("🔹 Sample IDs from test_measure.csv:", sampleTestIDs);
 
         // 🔍 Log `matchingIDs` before filtering
         const formattedMatchingIDs = matchingIDs.map(id => String(id).trim());
-        console.log("✅ Formatted Matching IDs from subject-info.csv:", formattedMatchingIDs);
 
         // 🔍 Debug: Find first mismatched ID
         let mismatchedIDs = [];
@@ -229,7 +231,6 @@ async function filterAndDisplayTable(ageGroup, matchingIDs) {
             }
         }
 
-        console.log("❌ Mismatched IDs (Not Found in test_measure.csv):", mismatchedIDs.slice(0, 10));
 
         // ✅ Filter rows that have an `ID_test` matching `matchingIDs`
         const filteredRows = rows.filter(row => formattedMatchingIDs.includes(String(row[idTestIndex]).trim()));
@@ -241,21 +242,62 @@ async function filterAndDisplayTable(ageGroup, matchingIDs) {
             return;
         }
 
+
+
+        let groupedData = d3.groups(filteredRows, d => d[idTestIndex])
+        .map(([id, records]) => {
+            // ✅ Ensure `records` is an array before processing
+            if (!Array.isArray(records) || records.length === 0) {
+                console.warn(`⚠️ Skipping ID ${id}: No valid records found.`);
+                return null; // Return null so it can be filtered out
+            }
+    
+            return [
+                id, 
+                isNaN(d3.mean(records, d => parseFloat(d[speedIndex]))) ? "N/A" : d3.mean(records, d => parseFloat(d[speedIndex])).toFixed(2),
+                isNaN(d3.mean(records, d => parseFloat(d[hrIndex]))) ? "N/A" : d3.mean(records, d => parseFloat(d[hrIndex])).toFixed(2),
+                isNaN(d3.mean(records, d => parseFloat(d[vo2Index]))) ? "N/A" : d3.mean(records, d => parseFloat(d[vo2Index])).toFixed(2),
+                isNaN(d3.mean(records, d => parseFloat(d[vco2Index]))) ? "N/A" : d3.mean(records, d => parseFloat(d[vco2Index])).toFixed(2),
+                isNaN(d3.mean(records, d => parseFloat(d[rrIndex]))) ? "N/A" : d3.mean(records, d => parseFloat(d[rrIndex])).toFixed(2),
+                isNaN(d3.mean(records, d => parseFloat(d[veIndex]))) ? "N/A" : d3.mean(records, d => parseFloat(d[veIndex])).toFixed(2)
+            ];
+        }).filter(d => d !== null); // ✅ Remove null values
+    
+
+
+
+
+
+
+
+        console.log(groupedData)
+
+
         // ✅ Display the first 20 matching rows
-        const displayedRows = filteredRows.slice(0, 40);
-
-        let tableHTML = "<table border='1'><thead><tr>";
-        tableHTML += header.map(col => `<th>${col}</th>`).join("");
-        tableHTML += "</tr></thead><tbody>";
-
-        displayedRows.forEach(row => {
-            tableHTML += `<tr>${row.map(cell => `<td>${cell}</td>`).join("")}</tr>`;
-        });
-
-        tableHTML += "</tbody></table>";
-        document.getElementById("outputTable").innerHTML = tableHTML;
+        const displayedRows = groupedData;
 
 
+
+
+// ✅ Define correct table headers matching groupedData structure
+const tableHeaders = ["ID", "Mean Speed", "Mean HR", "Mean VO2", "Mean VCO2", "Mean RR", "Mean VE"];
+
+let tableHTML = "<table border='1'><thead><tr>";
+tableHTML += tableHeaders.map(col => `<th>${col}</th>`).join(""); // ✅ Use correct headers
+tableHTML += "</tr></thead><tbody>";
+
+// ✅ Ensure displayedRows is an array of arrays before rendering
+displayedRows.forEach(row => {
+    if (!Array.isArray(row)) {
+        console.error("❌ ERROR: Row is not an array!", row);
+        return;
+    }
+
+    tableHTML += `<tr>${row.map(cell => `<td>${cell}</td>`).join("")}</tr>`;
+});
+
+tableHTML += "</tbody></table>";
+document.getElementById("outputTable").innerHTML = tableHTML;
 
 
 
@@ -270,14 +312,21 @@ async function filterAndDisplayTable(ageGroup, matchingIDs) {
             const time = parseFloat(row[timeIndex]) || 0;
             const hr = parseFloat(row[hrIndex]) || 0;
             const speed = parseFloat(row[speedIndex]) || 0;
+            const vo2 = parseFloat(row[vo2Index]) || 0;
+            const vco2 = parseFloat(row[vco2Index]) || 0;
+
 
             if (!timeMap[time]) {
-                timeMap[time] = { totalHR: 0, totalSpeed: 0, count: 0 };
+                timeMap[time] = { totalHR: 0, totalSpeed: 0, count: 0, totalVO2: 0, totalVCO2: 0 };
             }
 
             timeMap[time].totalHR += hr;
             timeMap[time].totalSpeed += speed;
             timeMap[time].count += 1;
+            timeMap[time].totalVO2 += vo2;
+            timeMap[time].totalVCO2 += vco2;
+
+
         });
 
         console.log('timemap', timeMap)
@@ -287,13 +336,18 @@ async function filterAndDisplayTable(ageGroup, matchingIDs) {
         const sortedTimes = Object.keys(timeMap).map(t => parseFloat(t)).sort((a, b) => a - b);
         const avgHR = sortedTimes.map(t => timeMap[t].totalHR / timeMap[t].count);
         const avgSpeed = sortedTimes.map(t => timeMap[t].totalSpeed / timeMap[t].count);
+        const avgVO2 = sortedTimes.map(t => timeMap[t].totalVO2 / timeMap[t].count);
+        const avgVCO2 = sortedTimes.map(t => timeMap[t].totalVCO2 / timeMap[t].count);
+
 
         console.log("📊 Sorted Time Steps:", sortedTimes);
         console.log("📊 Average HR for Each Time:", avgHR);
         console.log("📊 Average Speed for Each Time:", avgSpeed);
 
         // ✅ Call function to render the graph
+
         renderFilteredChart(sortedTimes, avgHR, avgSpeed);
+        renderVCO2VO2SpeedChart(sortedTimes, avgVO2, avgVCO2, avgSpeed);
 
 
     } catch (error) {
@@ -392,9 +446,98 @@ function renderFilteredChart(time, avgHR, avgSpeed) {
             }
         }
     });
+    
 
     console.log("✅ Chart Successfully Rendered!");
 }
+
+function renderVCO2VO2SpeedChart(time, avgVO2, avgVCO2) {
+    console.log("📊 Rendering VCO2, VO2 Chart...");
+
+    const ctx = document.getElementById("vco2Vo2SpeedChart");
+    if (!ctx) {
+        console.error("❌ ERROR: Canvas element for chart not found!");
+        return;
+    }
+
+    if (filteredChartInstance2) {
+        console.log("🔄 Destroying previous chart instance...");
+        filteredChartInstance2.destroy();
+    }
+
+    filteredChartInstance2 = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: time, // X-Axis: Time
+            datasets: [
+                {
+                    label: "Average VO2",
+                    data: avgVO2,
+                    borderColor: "#FF5733",
+                    backgroundColor: "rgba(255, 87, 51, 0.2)",
+                    borderWidth: 2,
+                    pointRadius: 1,
+                    hoverRadius: 5,
+                    fill: false
+                },
+                {
+                    label: "Average VCO2",
+                    data: avgVCO2,
+                    borderColor: "#33FF57",
+                    backgroundColor: "rgba(51, 255, 87, 0.2)",
+                    borderWidth: 2,
+                    pointRadius: 1,
+                    hoverRadius: 5,
+                    fill: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: "Time (seconds)",
+                        font: {
+                            size: 16
+                        }
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: "Average VO2 & VCO2",
+                        font: {
+                            size: 16
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        font: {
+                            size: 16
+                        }
+                    }
+                },
+                tooltip: {
+                    enabled: true,
+                    intersect: false
+                }
+            },
+            hover: {
+                intersect: false
+            }
+        }
+    });
+
+    console.log("✅ VCO2, VO2 Chart Successfully Rendered!");
+}
+
+
 
 
 
@@ -453,6 +596,23 @@ function applyFilters() {
 function filterByGender(gender) {
     currentGender = gender;
     applyFilters();
+
+
+
+    // ✅ Select the text container
+    const textElement = document.getElementById("dynamic-text");
+
+    // ✅ Update the text based on gender selection
+    if (gender === null) {
+        textElement.textContent = "This is the default text for all.";
+    } else if (gender === 0) {
+        textElement.textContent = "This is the text for males.";
+    } else if (gender === 1) {
+        textElement.textContent = "This is the text for females.";
+    }
+
+
+
     // ✅ Remove 'active' class from all buttons
     document.querySelectorAll("#genderFilter button").forEach(btn => btn.classList.remove("active"));
 
@@ -497,17 +657,7 @@ document.getElementById("toggleTableBtn").addEventListener("click", function() {
     }
 });
 
-window.addEventListener("scroll", function () {
-    const fadeText = document.getElementById("fadeText");
-    const scrollY = window.scrollY;
-    const windowHeight = window.innerHeight;
 
-    // Fade effect: The further you scroll, the more it fades
-    let opacity = 1 - (scrollY / (windowHeight * 0.25));
-
-    // Ensure opacity stays within 0-1 range
-    fadeText.style.opacity = Math.max(opacity, 0);
-});
 
 
 

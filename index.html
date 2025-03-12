@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="style.css">
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
     <script defer src="script.js"></script>
 </head>
 
@@ -49,8 +50,8 @@
 
 
 
-<div id="fadeText" style = "padding-top: 540px">
-    <h3 style = "padding-right: 560px;">Writeup</h3>
+<div id="main-content">
+    <h3>Writeup</h3>
     <p>What I have done so far is create a basic template for how I want this site to look.
         I have created the main page and the main visualization in which I want to expand into.
         The main visualization I wan to create for the viewer is based on the pie chart.
@@ -78,9 +79,6 @@
 
 
 
-<div id="fadeText" style = "padding-top: 100px">
-
-</div>
 
 
     <!-- Expand Button -->
@@ -101,8 +99,8 @@
 
 
 
-    <div id="fadeText" style = "padding-top: 200px">
-        <h3 style = "padding-right: 560px;">Introduction</h3>
+    <div id="main-content">
+        <h3>Introduction</h3>
         <p>Explore the effects of graded exercise on heart rate and oxygen consumption.
             Explore the effects of graded exercise on heart rate and oxygen consumption.
             Explore the effects of graded exercise on heart rate and oxygen consumption.
@@ -113,17 +111,19 @@
     </div>
 
 
-
-    <div id="fadeText" style = "padding-top: 200px">
-        <h3 style = "padding-right: 560px;">Introduction</h3>
-        <p>Explore the effects of graded exercise on heart rate and oxygen consumption.
-            Explore the effects of graded exercise on heart rate and oxygen consumption.
-            Explore the effects of graded exercise on heart rate and oxygen consumption.
-            Explore the effects of graded exercise on heart rate and oxygen consumption.
-    
-    
-            Explore the effects of graded exercise on heart rate and oxygen consumption.</p>
+    <div id="main-content">
+    <div id="text-container">
+        <p id="dynamic-text">This is the default text for all.</p>
     </div>
+    </div>
+
+
+    <div id="graphContainer2">
+        <canvas id="vco2Vo2SpeedChart"></canvas>
+    </div>
+
+
+
 
 
 

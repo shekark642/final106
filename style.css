@@ -35,9 +35,12 @@ canvas {
 
 /* Ensure body content starts below the fixed header */
 #main-content {
-    margin-top: 100px; /* Adjust to match the height of the fixed header */
-    text-align: center;
+    margin-top: 60px; /* Keep space below the navbar */
+    text-align: center; /* Center text inside the container */
     padding: 20px;
+    max-width: 70%; /* Adjust width of text */
+    margin-left: auto;
+    margin-right: auto;
 }
 
 
@@ -183,7 +186,6 @@ h2 {
 }
 
 #fadeText {
-    position: relative; /* Keeps it in the center of the viewport */
     
     top: 50%; /* Centers vertically */
     left: 50%; /* Moves to center horizontally */
@@ -217,12 +219,35 @@ h2 {
     border-radius: 10px;
 }
 
+#graphContainer2 {
+    position: relative;
+    width: 90%; /* Adjust width dynamically */
+    max-width: 1200px; /* Prevents it from getting too big */
+    margin: -10px auto; /* Centers the graph */
+    padding: 20px;
+    background: transparent;
+    border-radius: 10px;
+}
+
 /* Ensure the Chart Stays Large and Responsive */
 #filteredChart {
     width: 100% !important;
     height: 500px !important; /* Adjust height as needed */
     display: block;
 }
+
+
+#vco2Vo2SpeedChart {
+    width: 100% !important;
+    height: 500px !important; /* Adjust height as needed */
+    display: block;
+}
+
+
+
+
+
+
 
 /* Gender Filter Buttons */
 #genderFilter {
