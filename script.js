@@ -4,6 +4,9 @@ let storedTestIDs = []; // Store all unique ID_test values from test_measure.csv
 let filteredChartInstance = null; // Store the chart instance
 let filteredChartInstance2 = null; // Store the chart instance
 let vo2Vco2HRChart = null;
+let vo2Vco2HRChartSecond = null;
+let vo2Vco2HRChartThird = null;
+let vo2Vco2HRChartFourth = null;
 let individualRRChart = null; // Store the chart instance
 
 
@@ -426,16 +429,24 @@ const timeSeriesData = participantIDs.map(id => ({
 
 
 }));
+
+
         
-
-
-
 
 
         renderFilteredChart(sortedTimes, avgHR, avgSpeed);
         renderVCO2VO2SpeedChart(sortedTimes, avgVO2, avgVCO2, avgSpeed);
-        renderIndividualRRGraph(timeSeriesData);
+
+
+
+
+//       renderIndividualRRGraph(timeSeriesData);
+
         renderVO2VCO2HRChart(filteredRows);
+        
+        renderVO2VCO2HRChartSecondParticipant(filteredRows);
+        renderVO2VCO2HRChartThirdParticipant(filteredRows);
+        renderVO2VCO2HRChartFourthParticipant(filteredRows);
 
 
 
@@ -693,17 +704,134 @@ function renderIndividualRRGraph(timeSeriesData) {
     console.log("✅ Individual RR Graph Successfully Rendered!");
 }
 
+
 function renderVO2VCO2HRChart(filteredRows) {
-    console.log("📊 Rendering VO2/HR & VCO2/HR Chart for First 2 Participants...");
+    console.log("📊 Rendering VO₂/HR & VCO₂/HR Chart for One Participant...");
 
     const ctx = document.getElementById("vo2Vco2HRChart");
     if (!ctx) {
-        console.error("❌ ERROR: Canvas element for VO2/HR chart not found!");
+        console.error("❌ ERROR: Canvas element for VO₂/HR chart not found!");
         return;
     }
 
     if (vo2Vco2HRChart) {
         vo2Vco2HRChart.destroy();
+    }
+
+
+
+    // ✅ Column indexes based on known order
+    const timeIndex = 0;
+    const hrIndex = 2;
+    const vo2Index = 3;
+    const vco2Index = 4;
+    const idIndex = 8;
+
+    let participantData = {};
+    let selectedParticipant = null;
+
+    // ✅ Identify the first unique participant
+    for (const row of filteredRows) {
+        const participantID = row[idIndex]?.trim();
+        if (!participantID) continue;
+
+        if (!selectedParticipant) {
+            selectedParticipant = participantID;
+            participantData[selectedParticipant] = [];
+        }
+
+        // ✅ If this row is for the selected participant, add data
+        if (participantID === selectedParticipant) {
+            const time = parseFloat(row[timeIndex]);
+            const hr = parseFloat(row[hrIndex]);
+            const vo2 = parseFloat(row[vo2Index]);
+            const vco2 = parseFloat(row[vco2Index]);
+
+            if (!isNaN(time) && !isNaN(hr) && hr > 0 && !isNaN(vo2) && !isNaN(vco2)) {
+                participantData[selectedParticipant].push({
+                    time,
+                    vo2_hr: vo2 / hr,
+                    vco2_hr: vco2 / hr
+                });
+
+            }
+        }
+    }
+
+    if (!participantData[selectedParticipant] || participantData[selectedParticipant].length === 0) {
+        console.warn("⚠️ No valid data points found. Skipping chart rendering.");
+        return;
+    }
+
+    let data = participantData[selectedParticipant];
+
+    // ✅ Sort by time
+    data.sort((a, b) => a.time - b.time);
+
+    let datasets = [
+        {
+            label: `VO₂/HR - P${selectedParticipant}`,
+            data: data.map(entry => ({ x: entry.time, y: entry.vo2_hr })),
+            borderColor: "blue",
+            borderWidth: 2,
+            pointRadius: 0, // ✅ Remove points
+            hoverRadius: 5,
+            fill: false
+        },
+        {
+            label: `VCO₂/HR - P${selectedParticipant}`,
+            data: data.map(entry => ({ x: entry.time, y: entry.vco2_hr })),
+            borderColor: "green",
+            borderWidth: 2,
+            pointRadius: 0, // ✅ Remove points
+            hoverRadius: 5,
+            fill: false,
+            borderDash: [5, 5] // Dashed line
+        }
+    ];
+
+    vo2Vco2HRChart = new Chart(ctx, {
+        type: "line",
+        data: { datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 0 },
+            elements: { point: { radius: 0 } },
+            scales: {
+                x: {
+                    type: "linear",
+                    title: { display: true, text: "Time (seconds)", font: { size: 16 } }
+                },
+                y: {
+                    title: { display: true, text: "VO₂/HR & VCO₂/HR Ratio", font: { size: 16 } }
+                }
+            },
+            plugins: {
+                legend: { labels: { font: { size: 14 } } },
+                tooltip: { enabled: true, intersect: false }
+                
+            },
+            hover: { intersect: false }
+        }
+    });
+
+    console.log("✅ VO₂/HR & VCO₂/HR Chart for One Participant Successfully Rendered!");
+}
+
+
+
+function renderVO2VCO2HRChartSecondParticipant(filteredRows) {
+    console.log("📊 Rendering VO₂/HR & VCO₂/HR Chart for Second Participant...");
+
+    const ctx = document.getElementById("vo2Vco2HRChartSecond");
+    if (!ctx) {
+        console.error("❌ ERROR: Canvas element for VO₂/HR chart (Second Participant) not found!");
+        return;
+    }
+
+    if (window.vo2Vco2HRChartSecond instanceof Chart) {
+        window.vo2Vco2HRChartSecond.destroy();
     }
 
     // ✅ Column indexes based on known order
@@ -715,124 +843,337 @@ function renderVO2VCO2HRChart(filteredRows) {
 
     let participantData = {};
     let uniqueParticipants = new Set();
+    let selectedParticipant = null;
 
-    // ✅ Identify first 2 unique participants
-    filteredRows.forEach(row => {
+    // ✅ Identify the second unique participant
+    for (const row of filteredRows) {
         const participantID = row[idIndex]?.trim();
-        if (!participantID || uniqueParticipants.size >= 2) return;
+        if (!participantID) continue;
 
         if (!uniqueParticipants.has(participantID)) {
             uniqueParticipants.add(participantID);
-            participantData[participantID] = [];
         }
 
-        const time = parseFloat(row[timeIndex]);
-        const hr = parseFloat(row[hrIndex]);
-        const vo2 = parseFloat(row[vo2Index]);
-        const vco2 = parseFloat(row[vco2Index]);
-
-        // ✅ Ensure valid values before adding to dataset
-        if (!isNaN(time) && !isNaN(hr) && hr > 0 && !isNaN(vo2) && !isNaN(vco2)) {
-            participantData[participantID].push({
-                time,
-                vo2_hr: vo2 / hr,
-                vco2_hr: vco2 / hr
-            });
+        // ✅ Select the second participant only
+        if (uniqueParticipants.size === 2 && !selectedParticipant) {
+            selectedParticipant = participantID;
+            participantData[selectedParticipant] = [];
         }
-    });
 
-    if (Object.keys(participantData).length < 2) {
-        console.warn("⚠️ Not enough participants found. Skipping chart rendering.");
+        if (participantID === selectedParticipant) {
+            const time = parseFloat(row[timeIndex]);
+            const hr = parseFloat(row[hrIndex]);
+            const vo2 = parseFloat(row[vo2Index]);
+            const vco2 = parseFloat(row[vco2Index]);
+
+            if (!isNaN(time) && !isNaN(hr) && hr > 0 && !isNaN(vo2) && !isNaN(vco2)) {
+                participantData[selectedParticipant].push({
+                    time,
+                    vo2_hr: vo2 / hr,
+                    vco2_hr: vco2 / hr
+                });
+
+            }
+        }
+    }
+
+    if (!participantData[selectedParticipant] || participantData[selectedParticipant].length === 0) {
+        console.warn("⚠️ No valid data points found for the second participant. Skipping chart rendering.");
         return;
     }
 
-    let datasets = [];
-    let colors = ["blue", "green", "red", "purple"]; // Different colors for each line
-    let index = 0; // Track color index
+    let data = participantData[selectedParticipant];
 
-    Object.keys(participantData).forEach(participantID => {
-        let data = participantData[participantID];
+    // ✅ Sort by time
+    data.sort((a, b) => a.time - b.time);
 
-        if (data.length === 0) {
-            console.warn(`⚠️ No valid data points for participant ${participantID}`);
-            return;
-        }
-
-        // ✅ Sort by time to prevent data misalignment
-        data.sort((a, b) => a.time - b.time);
-
-        console.log(`✅ Processed Data for Participant ${participantID}:`, data);
-
-        // ✅ Add VO₂/HR line
-        datasets.push({
-            label: `VO₂/HR - P${participantID}`,
+    let datasets = [
+        {
+            label: `VO₂/HR - P${selectedParticipant}`,
             data: data.map(entry => ({ x: entry.time, y: entry.vo2_hr })),
-            borderColor: colors[index],
+            borderColor: "red", // Different color from first participant
             borderWidth: 2,
-            pointRadius: 0,
+            pointRadius: 0, // ✅ Remove points
             hoverRadius: 5,
             fill: false
-        });
-
-        // ✅ Add VCO₂/HR line (Dashed)
-        datasets.push({
-            label: `VCO₂/HR - P${participantID}`,
+        },
+        {
+            label: `VCO₂/HR - P${selectedParticipant}`,
             data: data.map(entry => ({ x: entry.time, y: entry.vco2_hr })),
-            borderColor: colors[index + 1],
+            borderColor: "purple", // Different color from first participant
             borderWidth: 2,
-            pointRadius: 0,
+            pointRadius: 0, // ✅ Remove points
             hoverRadius: 5,
             fill: false,
-            borderDash: [5, 5] // Dashed line for VCO2/HR
-        });
+            borderDash: [5, 5] // Dashed line
+        }
+    ];
 
-        index += 2; // Move to next color pair
-    });
-
-    if (datasets.length === 0) {
-        console.warn("⚠️ No valid datasets found. Skipping chart rendering.");
-        return;
-    }
-
-    // ✅ Generate the chart
-    vo2Vco2HRChart = new Chart(ctx, {
+    window.vo2Vco2HRChartSecond = new Chart(ctx, {
         type: "line",
         data: { datasets },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            animation: { duration: 0 },
+            elements: { point: { radius: 0 } },
             scales: {
                 x: {
-                    type: "linear", // ✅ Ensure time is treated as a continuous scale
-                    title: {
-                        display: true,
-                        text: "Time (seconds)",
-                        font: { size: 16 }
-                    }
+                    type: "linear",
+                    title: { display: true, text: "Time (seconds)", font: { size: 16 } }
                 },
                 y: {
-                    title: {
-                        display: true,
-                        text: "VO₂/HR & VCO₂/HR Ratio",
-                        font: { size: 16 }
-                    }
+                    title: { display: true, text: "VO₂/HR & VCO₂/HR Ratio", font: { size: 16 } }
                 }
             },
             plugins: {
-                legend: {
-                    labels: { font: { size: 14 } }
-                },
-                tooltip: {
-                    enabled: true,
-                    intersect: false
-                }
+                legend: { labels: { font: { size: 14 } } },
+                tooltip: { enabled: true, intersect: false }
             },
             hover: { intersect: false }
         }
     });
 
-    console.log("✅ VO₂/HR & VCO₂/HR Chart for Two Participants Successfully Rendered!");
+    console.log("✅ VO₂/HR & VCO₂/HR Chart for Second Participant Successfully Rendered!");
 }
+
+
+function renderVO2VCO2HRChartThirdParticipant(filteredRows) {
+    console.log("📊 Rendering VO₂/HR & VCO₂/HR Chart for Third Participant...");
+
+    const ctx = document.getElementById("vo2Vco2HRChartThird");
+    if (!ctx) {
+        console.error("❌ ERROR: Canvas element for VO₂/HR chart (Third Participant) not found!");
+        return;
+    }
+
+    // ✅ Ensure the chart exists before destroying it
+    if (window.vo2Vco2HRChartThird instanceof Chart) {
+        window.vo2Vco2HRChartThird.destroy();
+    }
+
+    // ✅ Column indexes based on known order
+    const timeIndex = 0;
+    const hrIndex = 2;
+    const vo2Index = 3;
+    const vco2Index = 4;
+    const idIndex = 8;
+
+    let participantData = {};
+    let uniqueParticipants = new Set();
+    let selectedParticipant = null;
+
+    // ✅ Identify the third unique participant
+    for (const row of filteredRows) {
+        const participantID = row[idIndex]?.trim();
+        if (!participantID) continue;
+
+        if (!uniqueParticipants.has(participantID)) {
+            uniqueParticipants.add(participantID);
+        }
+
+        // ✅ Select the third participant only
+        if (uniqueParticipants.size === 3 && !selectedParticipant) {
+            selectedParticipant = participantID;
+            participantData[selectedParticipant] = [];
+        }
+
+        if (participantID === selectedParticipant) {
+            const time = parseFloat(row[timeIndex]);
+            const hr = parseFloat(row[hrIndex]);
+            const vo2 = parseFloat(row[vo2Index]);
+            const vco2 = parseFloat(row[vco2Index]);
+
+            if (!isNaN(time) && !isNaN(hr) && hr > 0 && !isNaN(vo2) && !isNaN(vco2)) {
+                participantData[selectedParticipant].push({
+                    time,
+                    vo2_hr: vo2 / hr,
+                    vco2_hr: vco2 / hr
+                });
+
+            }
+        }
+    }
+
+    if (!participantData[selectedParticipant] || participantData[selectedParticipant].length === 0) {
+        console.warn("⚠️ No valid data points found for the third participant. Skipping chart rendering.");
+        return;
+    }
+
+    let data = participantData[selectedParticipant];
+
+    // ✅ Sort by time
+    data.sort((a, b) => a.time - b.time);
+
+    let datasets = [
+        {
+            label: `VO₂/HR - P${selectedParticipant}`,
+            data: data.map(entry => ({ x: entry.time, y: entry.vo2_hr })),
+            borderColor: "orange", // Different color for third participant
+            borderWidth: 2,
+            pointRadius: 0, // ✅ Remove points
+            hoverRadius: 5,
+            fill: false
+        },
+        {
+            label: `VCO₂/HR - P${selectedParticipant}`,
+            data: data.map(entry => ({ x: entry.time, y: entry.vco2_hr })),
+            borderColor: "brown", // Different color for third participant
+            borderWidth: 2,
+            pointRadius: 0, // ✅ Remove points
+            hoverRadius: 5,
+            fill: false,
+            borderDash: [5, 5] // Dashed line
+        }
+    ];
+
+    window.vo2Vco2HRChartThird = new Chart(ctx, {
+        type: "line",
+        data: { datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 0 },
+            elements: { point: { radius: 0 } },
+            scales: {
+                x: {
+                    type: "linear",
+                    title: { display: true, text: "Time (seconds)", font: { size: 16 } }
+                },
+                y: {
+                    title: { display: true, text: "VO₂/HR & VCO₂/HR Ratio", font: { size: 16 } }
+                }
+            },
+            plugins: {
+                legend: { labels: { font: { size: 14 } } },
+                tooltip: { enabled: true, intersect: false }
+            },
+            hover: { intersect: false }
+        }
+    });
+
+    console.log("✅ VO₂/HR & VCO₂/HR Chart for Third Participant Successfully Rendered!");
+}
+
+function renderVO2VCO2HRChartFourthParticipant(filteredRows) {
+    console.log("📊 Rendering VO₂/HR & VCO₂/HR Chart for Fourth Participant...");
+
+    const ctx = document.getElementById("vo2Vco2HRChartFourth");
+    if (!ctx) {
+        console.error("❌ ERROR: Canvas element for VO₂/HR chart (Fourth Participant) not found!");
+        return;
+    }
+
+    // ✅ Ensure the chart exists before destroying it
+    if (window.vo2Vco2HRChartFourth instanceof Chart) {
+        window.vo2Vco2HRChartFourth.destroy();
+    }
+
+    // ✅ Column indexes based on known order
+    const timeIndex = 0;
+    const hrIndex = 2;
+    const vo2Index = 3;
+    const vco2Index = 4;
+    const idIndex = 8;
+
+    let participantData = {};
+    let uniqueParticipants = new Set();
+    let selectedParticipant = null;
+
+    // ✅ Identify the fourth unique participant
+    for (const row of filteredRows) {
+        const participantID = row[idIndex]?.trim();
+        if (!participantID) continue;
+
+        if (!uniqueParticipants.has(participantID)) {
+            uniqueParticipants.add(participantID);
+        }
+
+        // ✅ Select the fourth participant only
+        if (uniqueParticipants.size === 4 && !selectedParticipant) {
+            selectedParticipant = participantID;
+            participantData[selectedParticipant] = [];
+        }
+
+        if (participantID === selectedParticipant) {
+            const time = parseFloat(row[timeIndex]);
+            const hr = parseFloat(row[hrIndex]);
+            const vo2 = parseFloat(row[vo2Index]);
+            const vco2 = parseFloat(row[vco2Index]);
+
+            if (!isNaN(time) && !isNaN(hr) && hr > 0 && !isNaN(vo2) && !isNaN(vco2)) {
+                participantData[selectedParticipant].push({
+                    time,
+                    vo2_hr: vo2 / hr,
+                    vco2_hr: vco2 / hr
+                });
+
+            }
+        }
+    }
+
+    if (!participantData[selectedParticipant] || participantData[selectedParticipant].length === 0) {
+        console.warn("⚠️ No valid data points found for the fourth participant. Skipping chart rendering.");
+        return;
+    }
+
+    let data = participantData[selectedParticipant];
+
+    // ✅ Sort by time
+    data.sort((a, b) => a.time - b.time);
+
+    let datasets = [
+        {
+            label: `VO₂/HR - P${selectedParticipant}`,
+            data: data.map(entry => ({ x: entry.time, y: entry.vo2_hr })),
+            borderColor: "purple", // Different color for fourth participant
+            borderWidth: 2,
+            pointRadius: 0, // ✅ Remove points
+            hoverRadius: 5,
+            fill: false
+        },
+        {
+            label: `VCO₂/HR - P${selectedParticipant}`,
+            data: data.map(entry => ({ x: entry.time, y: entry.vco2_hr })),
+            borderColor: "pink", // Different color for fourth participant
+            borderWidth: 2,
+            pointRadius: 0, // ✅ Remove points
+            hoverRadius: 5,
+            fill: false,
+            borderDash: [5, 5] // Dashed line
+        }
+    ];
+
+    window.vo2Vco2HRChartFourth = new Chart(ctx, {
+        type: "line",
+        data: { datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 0 },
+            elements: { point: { radius: 0 } },
+            scales: {
+                x: {
+                    type: "linear",
+                    title: { display: true, text: "Time (seconds)", font: { size: 16 } }
+                },
+                y: {
+                    title: { display: true, text: "VO₂/HR & VCO₂/HR Ratio", font: { size: 16 } }
+                }
+            },
+            plugins: {
+                legend: { labels: { font: { size: 14 } } },
+                tooltip: { enabled: true, intersect: false }
+            },
+            hover: { intersect: false }
+        }
+    });
+
+    console.log("✅ VO₂/HR & VCO₂/HR Chart for Fourth Participant Successfully Rendered!");
+}
+
+
+
 
 
 
@@ -911,6 +1252,8 @@ function filterByGender(gender) {
         } else if (gender === 1) {
             document.querySelector("#genderFilter button:nth-child(3)").classList.add("active"); // "Female"
         }
+        selectedAgeGroup = "All Ages";
+
 
         applyGenderAndAgeFilters();
 
@@ -1032,6 +1375,65 @@ document.getElementById("toggleTableBtn").addEventListener("click", function() {
         this.textContent = "Collapse Data";
     }
 });
+
+
+
+
+
+const speedControl = document.getElementById('speed');
+let speed = speedControl.value;
+speedControl.addEventListener('input', () => speed = speedControl.value);
+
+// Get SVG paths
+const airway = document.getElementById('airway');
+const arteries = document.getElementById('arteries');
+const veins = document.getElementById('veins');
+
+// Get particles
+const oxygen = document.getElementById('oxygen');
+const co2 = document.getElementById('co2');
+const blood = document.querySelectorAll('.blood');
+
+// Animation setup
+let airwayLength = airway.getTotalLength();
+let arteriesLength = arteries.getTotalLength();
+let veinsLength = veins.getTotalLength();
+
+let oxygenPos = 0, co2Pos = airwayLength;
+let bloodPos = [0, arteriesLength / 3, (2 * arteriesLength) / 3];
+
+// Animate particles
+function animate() {
+    let animationSpeed = 0.5 * speed;
+
+    oxygenPos += animationSpeed;
+    co2Pos -= animationSpeed;
+
+    if (oxygenPos > airwayLength) oxygenPos = 0;
+    if (co2Pos < 0) co2Pos = airwayLength;
+
+    let oxygenPoint = airway.getPointAtLength(oxygenPos);
+    oxygen.setAttribute('cx', oxygenPoint.x);
+    oxygen.setAttribute('cy', oxygenPoint.y);
+
+    let co2Point = airway.getPointAtLength(co2Pos);
+    co2.setAttribute('cx', co2Point.x);
+    co2.setAttribute('cy', co2Point.y);
+
+    blood.forEach((particle, i) => {
+        bloodPos[i] += animationSpeed;
+        if (bloodPos[i] > arteriesLength) bloodPos[i] = 0;
+        let point = arteries.getPointAtLength(bloodPos[i]);
+        particle.setAttribute('cx', point.x);
+        particle.setAttribute('cy', point.y);
+    });
+
+    requestAnimationFrame(animate);
+}
+
+// Start animations
+animate();
+
 
 
 

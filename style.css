@@ -219,6 +219,36 @@ h2 {
     border-radius: 10px;
 }
 
+.graph-container2 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: transparent; /* Light background */
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+    height: 80%;
+}
+
+
+#multiGraphContainer {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2 columns */
+    grid-template-rows: repeat(2, auto); /* 2 rows */
+    gap: 20px; /* Space between charts */
+    width: 75%;
+    max-width: 1200px;
+    margin: 20px auto; /* Center the grid */
+    padding: 20px;
+    background: rgba(3, 3, 231, 0.1); /* Light blue with 10% opacity */
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+    margin-right: 10%;
+
+}
+
+
+
 
 
 /* Ensure the Chart Stays Large and Responsive */
@@ -239,13 +269,6 @@ h2 {
     width: 280% !important;
     height: 300px !important; /* Adjust height as needed */
     display: block;
-}
-
-#vo2Vco2HRChart {
-    width: 300% !important;
-    height: 300px !important; /* Adjust height as needed */
-    display: block;
-
 }
 
 
@@ -296,3 +319,38 @@ h2 {
 
 
 
+#container {
+    margin: auto;
+    height: 300px;
+    width: 400px;
+    border: 3px solid #003366;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    padding: 10px;
+}
+
+#speed {
+    width: 300px;
+    margin-bottom: 20px;
+}
+
+/* Heartbeat Animation */
+@keyframes heartbeat {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+#heart {
+    animation: heartbeat 1s infinite;
+}
+
+/* Lung Breathing Animation */
+@keyframes breathing {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+#left-lung, #right-lung {
+    animation: breathing 2s infinite;
+}
