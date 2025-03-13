@@ -38,9 +38,9 @@ canvas {
     margin-top: 60px; /* Keep space below the navbar */
     text-align: center; /* Center text inside the container */
     padding: 20px;
-    max-width: 70%; /* Adjust width of text */
-    margin-left: auto;
-    margin-right: auto;
+    max-width: 75%; /* Adjust width of text */
+    margin-left: 9%;
+    margin-right: 0%;
 }
 
 
@@ -153,9 +153,9 @@ h2 {
 /* Sidebar Styles */
 #tableSidebar {
     position: fixed;
-    left: -300px; /* Start off-screen */
+    left: -530px; /* Start off-screen */
     top: 163px; /* Adjust this if your navbar is taller */
-    width: 300px;
+    width: 600px;
     height: calc(100% - 50px); /* Make sure it doesn't go under the navbar */
     background: white;
     padding: 15px;
@@ -167,8 +167,8 @@ h2 {
 /* Expand Button */
 #toggleTableBtn {
     position: fixed;
-    left: 10px;
-    top: 50%;
+    left: 80px;
+    top: 56%;
     transform: translateY(-50%);
     background: #007bff;
     color: white;
@@ -219,15 +219,7 @@ h2 {
     border-radius: 10px;
 }
 
-#graphContainer2 {
-    position: relative;
-    width: 90%; /* Adjust width dynamically */
-    max-width: 1200px; /* Prevents it from getting too big */
-    margin: -10px auto; /* Centers the graph */
-    padding: 20px;
-    background: transparent;
-    border-radius: 10px;
-}
+
 
 /* Ensure the Chart Stays Large and Responsive */
 #filteredChart {
@@ -241,6 +233,19 @@ h2 {
     width: 100% !important;
     height: 500px !important; /* Adjust height as needed */
     display: block;
+}
+
+#individualRRChart {
+    width: 280% !important;
+    height: 300px !important; /* Adjust height as needed */
+    display: block;
+}
+
+#vo2Vco2HRChart {
+    width: 300% !important;
+    height: 300px !important; /* Adjust height as needed */
+    display: block;
+
 }
 
 

@@ -1,7 +1,11 @@
+let selectedAgeGroup = "All Ages"; // Default to all ages
 let chartInstance = null;
 let storedTestIDs = []; // Store all unique ID_test values from test_measure.csv
 let filteredChartInstance = null; // Store the chart instance
 let filteredChartInstance2 = null; // Store the chart instance
+let vo2Vco2HRChart = null;
+let individualRRChart = null; // Store the chart instance
+
 
 let currentGender = null; // Stores the selected gender filter
 window.originalRows = []; // Store all data for filtering
@@ -110,25 +114,34 @@ async function loadData() {
 
 // Function to create the pie chart
 function renderChart(labels, data, tooltips, ageGroups) {
-
     const ctx = document.getElementById("agePieChart").getContext("2d");
+    let originalColors = ["#FF6384", "#36A2EB", "#FFCE56", "#4CAF50"]; // Default colors
 
-    // Destroy previous chart if it exists
+
     if (chartInstance) {
-        chartInstance.destroy();
+        // ✅ Update existing chart instead of re-creating it
+        chartInstance.data.labels = labels;
+        chartInstance.data.datasets[0].data = data;
+        chartInstance.data.datasets[0].backgroundColor = labels.map((label, i) =>
+            selectedAgeGroup === "All Ages" ? originalColors[i] :
+            label === selectedAgeGroup ? shadeColor(originalColors[i], -30) : originalColors[i]
+        );
+        chartInstance.update(); // ✅ Instant update without re-rendering
+        return;
     }
 
-    let originalColors = ["#FF6384", "#36A2EB", "#FFCE56", "#4CAF50"]; // Original colors
+    
 
-
-    // Create the chart
     chartInstance = new Chart(ctx, {
         type: "pie",
         data: {
-            labels: labels,
+            labels,
             datasets: [{
-                data: data,
-                backgroundColor: [...originalColors], // Use original colors
+                data,
+                backgroundColor: labels.map((label, i) => 
+                    selectedAgeGroup === "All Ages" ? originalColors[i] : // ✅ Reset colors when "All Ages" is selected
+                    label === selectedAgeGroup ? shadeColor(originalColors[i], -30) : originalColors[i]
+                ), 
                 hoverOffset: 10
             }]
         },
@@ -138,51 +151,96 @@ function renderChart(labels, data, tooltips, ageGroups) {
                 tooltip: {
                     callbacks: {
                         label: function (context) {
-                            return tooltips[context.dataIndex]; // Show avg stats on hover
+                            return tooltips[context.dataIndex];
                         }
                     }
                 }
             },
-            // 🔥 Add onClick event to filter data when clicking a slice
             onClick: async (event, elements) => {
                 if (elements.length > 0) {
-                    const index = elements[0].index; // Get the clicked slice index
-                    const selectedAgeGroup = labels[index]; // Get the age group
+                    const index = elements[0].index;
+                    const clickedAgeGroup = labels[index];
 
-                    chartInstance.data.datasets[0].backgroundColor = originalColors.map((color, i) =>
-                        i === index ? shadeColor(color, -20) : color
-                    );
-
-                    chartInstance.update(); // Redraw chart with new colors
-
-                    // ✅ Update message text
-
-
-
-
-
-                    // Fetch IDs of this age group and display filtered data
-                        const validIDs = ageGroups[selectedAgeGroup]?.ids || [];
-
-
-                        const normalizedTestIDs = storedTestIDs.map(id => id.replace(/_1$/, ""));
-
-                        // ✅ Find matching IDs after normalization
-                        const matchingIDs = normalizedTestIDs.filter(id => validIDs.includes(id));
-
-
-
-                        
-                        if (matchingIDs.length > 0) {
-                            await filterAndDisplayTable(selectedAgeGroup, matchingIDs);
-                        } else {
-                            document.getElementById("outputTable").innerHTML = `<p style="color: red;">No matching data found for selected age group.</p>`;
-                        }
+                    // ✅ If the same age is clicked again, reset to "All Ages"
+                    if (selectedAgeGroup === clickedAgeGroup) {
+                        selectedAgeGroup = "All Ages";
+                    } else {
+                        selectedAgeGroup = clickedAgeGroup;
                     }
+
+                    // ✅ Apply both filters together (Gender + Age)
+                    applyGenderAndAgeFilters();
                 }
             }
-        });
+        }
+    });
+}
 
+
+function applyGenderAndAgeFilters() {
+    const filteredRows = window.originalRows.filter(row => {
+        const sex = parseInt(row[window.header.indexOf("Sex")]);
+        return currentGender === null || sex === currentGender;
+    });
+
+    const ageGroups = {
+        "10-18": { count: 0, ids: [] },
+        "18-30": { count: 0, ids: [] },
+        "30-45": { count: 0, ids: [] },
+        "45-63": { count: 0, ids: [] },
+    };
+
+    let validIDs = [];
+
+    filteredRows.forEach(row => {
+        const age = parseFloat(row[window.header.indexOf("Age")]);
+        const userID = row[window.header.indexOf("ID")];
+
+        let group = null;
+        if (age >= 10 && age < 18) group = "10-18";
+        else if (age >= 18 && age < 30) group = "18-30";
+        else if (age >= 30 && age < 45) group = "30-45";
+        else if (age >= 45 && age <= 63) group = "45-63";
+
+        if (group) {
+            ageGroups[group].count++;
+            ageGroups[group].ids.push(userID);
+            validIDs.push(userID);
+        }
+    });
+
+    const labels = Object.keys(ageGroups);
+    const dataValues = labels.map(group => ageGroups[group].count);
+    const avgStats = labels.map(group => `Participants: ${ageGroups[group].count}`);
+
+    renderChart(labels, dataValues, avgStats, ageGroups); // ✅ Re-render chart
+
+    // ✅ Apply selected age filter
+    if (selectedAgeGroup !== "All Ages") {
+        validIDs = ageGroups[selectedAgeGroup]?.ids || [];
+    }
+
+    // ✅ Normalize test IDs
+    const normalizedTestIDs = storedTestIDs.map(id => id.replace(/_1$/, ""));
+    const matchingIDs = normalizedTestIDs.filter(id => validIDs.includes(id));
+
+    // ✅ Filter dataset based on IDs
+    if (matchingIDs.length > 0) {
+        filterAndDisplayTable(selectedAgeGroup, matchingIDs);
+    } else {
+        document.getElementById("outputTable").innerHTML = `<p style="color: red;">No matching data found.</p>`;
+    }
+}
+
+
+
+
+
+
+
+function resetGenderButtons() {
+    document.querySelectorAll("#genderFilter button").forEach(btn => btn.classList.remove("active"));
+    document.querySelector("#genderFilter button:nth-child(1)").classList.add("active"); // ✅ Set "All" as active
 }
 
 
@@ -195,9 +253,6 @@ async function filterAndDisplayTable(ageGroup, matchingIDs) {
         const rows = data.trim().split("\n").map(line => line.split(",").map(cell => cell.trim()));
 
         const header = rows.shift(); // Remove header row
-
-
-
 
 
 
@@ -274,7 +329,7 @@ async function filterAndDisplayTable(ageGroup, matchingIDs) {
 
 
         // ✅ Display the first 20 matching rows
-        const displayedRows = groupedData;
+        const displayedRows = groupedData.slice(0,50);
 
 
 
@@ -308,12 +363,19 @@ document.getElementById("outputTable").innerHTML = tableHTML;
 
 
         let timeMap = {};
+        let individualRRData = {};
+
+
         filteredRows.forEach(row => {
             const time = parseFloat(row[timeIndex]) || 0;
             const hr = parseFloat(row[hrIndex]) || 0;
             const speed = parseFloat(row[speedIndex]) || 0;
             const vo2 = parseFloat(row[vo2Index]) || 0;
             const vco2 = parseFloat(row[vco2Index]) || 0;
+            const rr = parseFloat(row[rrIndex]) || 0;
+
+            const id = row[idTestIndex]?.trim();
+
 
 
             if (!timeMap[time]) {
@@ -326,6 +388,13 @@ document.getElementById("outputTable").innerHTML = tableHTML;
             timeMap[time].totalVO2 += vo2;
             timeMap[time].totalVCO2 += vco2;
 
+
+
+            if (!individualRRData[id]) {
+                individualRRData[id] = [];
+            }
+
+            individualRRData[id].push({ time, rr });
 
         });
 
@@ -340,14 +409,34 @@ document.getElementById("outputTable").innerHTML = tableHTML;
         const avgVCO2 = sortedTimes.map(t => timeMap[t].totalVCO2 / timeMap[t].count);
 
 
-        console.log("📊 Sorted Time Steps:", sortedTimes);
-        console.log("📊 Average HR for Each Time:", avgHR);
-        console.log("📊 Average Speed for Each Time:", avgSpeed);
+        Object.keys(individualRRData).forEach(id => {
+            individualRRData[id].sort((a, b) => a.time - b.time);
+        });
 
-        // ✅ Call function to render the graph
+        const participantIDs = Object.keys(individualRRData).slice(0, 5); 
+
+const timeSeriesData = participantIDs.map(id => ({
+    label: `Participant ${id}`,
+    data: individualRRData[id].map(entry => ({ x: entry.time, y: entry.rr })),
+    borderColor: `hsl(${Math.random() * 360}, 70%, 50%)`, // Random color for each participant
+    borderWidth: 1,
+    pointRadius: 0, // No points, just lines
+    fill: false
+
+
+
+}));
+        
+
+
+
+
 
         renderFilteredChart(sortedTimes, avgHR, avgSpeed);
         renderVCO2VO2SpeedChart(sortedTimes, avgVO2, avgVCO2, avgSpeed);
+        renderIndividualRRGraph(timeSeriesData);
+        renderVO2VCO2HRChart(filteredRows);
+
 
 
     } catch (error) {
@@ -361,14 +450,16 @@ function renderFilteredChart(time, avgHR, avgSpeed) {
     console.log("📊 Attempting to Render Chart...");
 
     const ctx = document.getElementById("filteredChart");
-    if (!ctx) {
-        console.error("❌ ERROR: Canvas element for chart not found!");
-        return;
-    }
+    
+
 
     if (filteredChartInstance) {
-        console.log("🔄 Destroying previous chart instance...");
-        filteredChartInstance.destroy();
+        // ✅ Update existing chart instead of re-creating it
+        filteredChartInstance.data.labels = time;
+        filteredChartInstance.data.datasets[0].data = avgHR;
+        filteredChartInstance.data.datasets[1].data = avgSpeed;
+        filteredChartInstance.update();
+        return;
     }
 
     console.log("📊 Rendering Chart with Data:");
@@ -455,16 +546,16 @@ function renderVCO2VO2SpeedChart(time, avgVO2, avgVCO2) {
     console.log("📊 Rendering VCO2, VO2 Chart...");
 
     const ctx = document.getElementById("vco2Vo2SpeedChart");
-    if (!ctx) {
-        console.error("❌ ERROR: Canvas element for chart not found!");
-        return;
-    }
+
 
     if (filteredChartInstance2) {
-        console.log("🔄 Destroying previous chart instance...");
-        filteredChartInstance2.destroy();
+        // ✅ Update existing chart instead of re-creating it
+        filteredChartInstance2.data.labels = time;
+        filteredChartInstance2.data.datasets[0].data = avgVO2;
+        filteredChartInstance2.data.datasets[1].data = avgVCO2;
+        filteredChartInstance2.update();
+        return;
     }
-
     filteredChartInstance2 = new Chart(ctx, {
         type: "line",
         data: {
@@ -537,9 +628,211 @@ function renderVCO2VO2SpeedChart(time, avgVO2, avgVCO2) {
     console.log("✅ VCO2, VO2 Chart Successfully Rendered!");
 }
 
+function renderIndividualRRGraph(timeSeriesData) {
+    console.log("📊 Rendering Individual RR Graph...");
+
+    const ctx = document.getElementById("individualRRChart");
 
 
+    if (individualRRChart) {
+        // ✅ Update existing chart instead of re-creating it
+        individualRRChart.data.datasets = timeSeriesData;
+        individualRRChart.update();
+        return;
+    }
 
+    if (!timeSeriesData || timeSeriesData.length === 0) {
+        console.warn("⚠️ No RR data available for rendering.");
+        return;
+    }
+
+    individualRRChart = new Chart(ctx, {
+        type: "line",
+        data: {
+            datasets: timeSeriesData // ✅ Multiple datasets for each participant
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    type: "linear",
+                    title: {
+                        display: true,
+                        text: "Time (seconds)",
+                        font: {
+                            size: 16
+                        }
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: "Respiratory Rate (RR)",
+                        font: {
+                            size: 16
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false // ✅ Hide legend if too many participants
+                },
+                tooltip: {
+                    enabled: true,
+                    intersect: false
+                }
+            },
+            hover: {
+                intersect: false
+            }
+        }
+    });
+
+    console.log("✅ Individual RR Graph Successfully Rendered!");
+}
+
+function renderVO2VCO2HRChart(filteredRows) {
+    console.log("📊 Rendering VO2/HR & VCO2/HR Chart for First 2 Participants...");
+
+    const ctx = document.getElementById("vo2Vco2HRChart");
+    if (!ctx) {
+        console.error("❌ ERROR: Canvas element for VO2/HR chart not found!");
+        return;
+    }
+
+    if (vo2Vco2HRChart) {
+        vo2Vco2HRChart.destroy();
+    }
+
+    // ✅ Column indexes based on known order
+    const timeIndex = 0;
+    const hrIndex = 2;
+    const vo2Index = 3;
+    const vco2Index = 4;
+    const idIndex = 8;
+
+    let participantData = {};
+    let uniqueParticipants = new Set();
+
+    // ✅ Identify first 2 unique participants
+    filteredRows.forEach(row => {
+        const participantID = row[idIndex]?.trim();
+        if (!participantID || uniqueParticipants.size >= 2) return;
+
+        if (!uniqueParticipants.has(participantID)) {
+            uniqueParticipants.add(participantID);
+            participantData[participantID] = [];
+        }
+
+        const time = parseFloat(row[timeIndex]);
+        const hr = parseFloat(row[hrIndex]);
+        const vo2 = parseFloat(row[vo2Index]);
+        const vco2 = parseFloat(row[vco2Index]);
+
+        // ✅ Ensure valid values before adding to dataset
+        if (!isNaN(time) && !isNaN(hr) && hr > 0 && !isNaN(vo2) && !isNaN(vco2)) {
+            participantData[participantID].push({
+                time,
+                vo2_hr: vo2 / hr,
+                vco2_hr: vco2 / hr
+            });
+        }
+    });
+
+    if (Object.keys(participantData).length < 2) {
+        console.warn("⚠️ Not enough participants found. Skipping chart rendering.");
+        return;
+    }
+
+    let datasets = [];
+    let colors = ["blue", "green", "red", "purple"]; // Different colors for each line
+    let index = 0; // Track color index
+
+    Object.keys(participantData).forEach(participantID => {
+        let data = participantData[participantID];
+
+        if (data.length === 0) {
+            console.warn(`⚠️ No valid data points for participant ${participantID}`);
+            return;
+        }
+
+        // ✅ Sort by time to prevent data misalignment
+        data.sort((a, b) => a.time - b.time);
+
+        console.log(`✅ Processed Data for Participant ${participantID}:`, data);
+
+        // ✅ Add VO₂/HR line
+        datasets.push({
+            label: `VO₂/HR - P${participantID}`,
+            data: data.map(entry => ({ x: entry.time, y: entry.vo2_hr })),
+            borderColor: colors[index],
+            borderWidth: 2,
+            pointRadius: 0,
+            hoverRadius: 5,
+            fill: false
+        });
+
+        // ✅ Add VCO₂/HR line (Dashed)
+        datasets.push({
+            label: `VCO₂/HR - P${participantID}`,
+            data: data.map(entry => ({ x: entry.time, y: entry.vco2_hr })),
+            borderColor: colors[index + 1],
+            borderWidth: 2,
+            pointRadius: 0,
+            hoverRadius: 5,
+            fill: false,
+            borderDash: [5, 5] // Dashed line for VCO2/HR
+        });
+
+        index += 2; // Move to next color pair
+    });
+
+    if (datasets.length === 0) {
+        console.warn("⚠️ No valid datasets found. Skipping chart rendering.");
+        return;
+    }
+
+    // ✅ Generate the chart
+    vo2Vco2HRChart = new Chart(ctx, {
+        type: "line",
+        data: { datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    type: "linear", // ✅ Ensure time is treated as a continuous scale
+                    title: {
+                        display: true,
+                        text: "Time (seconds)",
+                        font: { size: 16 }
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: "VO₂/HR & VCO₂/HR Ratio",
+                        font: { size: 16 }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: { font: { size: 14 } }
+                },
+                tooltip: {
+                    enabled: true,
+                    intersect: false
+                }
+            },
+            hover: { intersect: false }
+        }
+    });
+
+    console.log("✅ VO₂/HR & VCO₂/HR Chart for Two Participants Successfully Rendered!");
+}
 
 
 
@@ -550,6 +843,8 @@ function applyFilters() {
 
     // ✅ Categorize participants into age groups
     const ageGroups = {
+        "All Ages": { count: window.originalRows.length, totalWeight: 0, totalHeight: 0, ids: [] },
+
         "10-18": { count: 0, totalWeight: 0, totalHeight: 0, ids: [] },
         "18-30": { count: 0, totalWeight: 0, totalHeight: 0, ids: [] },
         "30-45": { count: 0, totalWeight: 0, totalHeight: 0, ids: [] },
@@ -577,10 +872,13 @@ function applyFilters() {
             ageGroups[group].totalHeight += height;
             ageGroups[group].ids.push(userID);
         }
+
+        ageGroups["All Ages"].ids.push(userID); // ✅ Add all IDs to "All Ages"
+
     });
 
     // ✅ Compute averages
-    const labels = Object.keys(ageGroups);
+    const labels = Object.keys(ageGroups).filter(label => label !== "All Ages"); // Exclude "All Ages" from pie chart
     const dataValues = labels.map(group => ageGroups[group].count);
     const avgStats = labels.map(group => {
         const { count, totalWeight, totalHeight } = ageGroups[group];
@@ -591,18 +889,104 @@ function applyFilters() {
 
     // ✅ Render the updated chart
     renderChart(labels, dataValues, avgStats, ageGroups);
+
+    selectedAgeGroup = "All Ages";
+
 }
 
+
 function filterByGender(gender) {
-    currentGender = gender;
-    applyFilters();
+    currentGender = gender; // Update global gender filter
 
 
 
-    // ✅ Select the text container
+        // ✅ Remove 'active' class from all buttons
+        document.querySelectorAll("#genderFilter button").forEach(btn => btn.classList.remove("active"));
+
+        // ✅ Add 'active' class to the selected button
+        if (gender === null) {
+            document.querySelector("#genderFilter button:nth-child(1)").classList.add("active"); // "All"
+        } else if (gender === 0) {
+            document.querySelector("#genderFilter button:nth-child(2)").classList.add("active"); // "Male"
+        } else if (gender === 1) {
+            document.querySelector("#genderFilter button:nth-child(3)").classList.add("active"); // "Female"
+        }
+
+        applyGenderAndAgeFilters();
+
+        if (chartInstance) {
+            let originalColors = ["#FF6384", "#36A2EB", "#FFCE56", "#4CAF50"]; // Default colors
+            chartInstance.data.datasets[0].backgroundColor = [...originalColors]; // ✅ Reset colors
+            chartInstance.update();
+        }
+
+    // ✅ First, filter dataset by gender
+    const filteredRows = window.originalRows.filter(row => {
+        const sex = parseInt(row[window.header.indexOf("Sex")]);
+        return gender === null || sex === gender; // Keep only selected gender
+    });
+
+    // ✅ Now, categorize by age
+    const ageGroups = {
+        "10-18": { count: 0, totalWeight: 0, totalHeight: 0, ids: [] },
+        "18-30": { count: 0, totalWeight: 0, totalHeight: 0, ids: [] },
+        "30-45": { count: 0, totalWeight: 0, totalHeight: 0, ids: [] },
+        "45-63": { count: 0, totalWeight: 0, totalHeight: 0, ids: [] },
+    };
+
+    let validIDs = [];
+
+    filteredRows.forEach(row => {
+        const age = parseFloat(row[window.header.indexOf("Age")]);
+        const weight = parseFloat(row[window.header.indexOf("Weight")]);
+        const height = parseFloat(row[window.header.indexOf("Height")]);
+        const userID = row[window.header.indexOf("ID")];
+
+        let group = null;
+        if (age >= 10 && age < 18) group = "10-18";
+        else if (age >= 18 && age < 30) group = "18-30";
+        else if (age >= 30 && age < 45) group = "30-45";
+        else if (age >= 45 && age <= 63) group = "45-63";
+
+        if (group) {
+            ageGroups[group].count++;
+            ageGroups[group].totalWeight += weight;
+            ageGroups[group].totalHeight += height;
+            ageGroups[group].ids.push(userID);
+            validIDs.push(userID);
+        }
+    });
+
+    // ✅ Compute new chart data
+    const labels = Object.keys(ageGroups);
+    const dataValues = labels.map(group => ageGroups[group].count);
+    const avgStats = labels.map(group => {
+        const { count, totalWeight, totalHeight } = ageGroups[group];
+        return count > 0
+            ? `Avg Weight: ${(totalWeight / count).toFixed(1)} kg\nAvg Height: ${(totalHeight / count).toFixed(1)} cm`
+            : "No Data";
+    });
+
+    // ✅ Render the pie chart with the filtered gender data
+    renderChart(labels, dataValues, avgStats, ageGroups);
+
+    // ✅ Reset selected age group to "All Ages"
+    selectedAgeGroup = "All Ages";
+
+    // ✅ Normalize test IDs for matching
+    const normalizedTestIDs = storedTestIDs.map(id => id.replace(/_1$/, ""));
+    const matchingIDs = normalizedTestIDs.filter(id => validIDs.includes(id));
+
+    // ✅ Now filter the dataset based on these IDs
+    if (matchingIDs.length > 0) {
+        filterAndDisplayTable("Gender Filter", matchingIDs);
+    } else {
+        document.getElementById("outputTable").innerHTML = `<p style="color: red;">No matching data found for selected gender.</p>`;
+    }
+
+
     const textElement = document.getElementById("dynamic-text");
 
-    // ✅ Update the text based on gender selection
     if (gender === null) {
         textElement.textContent = "This is the default text for all.";
     } else if (gender === 0) {
@@ -611,27 +995,19 @@ function filterByGender(gender) {
         textElement.textContent = "This is the text for females.";
     }
 
-
-
-    // ✅ Remove 'active' class from all buttons
+    // ✅ Update UI for active button styling
     document.querySelectorAll("#genderFilter button").forEach(btn => btn.classList.remove("active"));
+    document.querySelector(`#genderFilter button:nth-child(${gender === null ? 1 : gender + 2})`).classList.add("active");
 
-    // ✅ Add 'active' class to the selected button
-    if (gender === null) {
-        document.querySelector("#genderFilter button:nth-child(1)").classList.add("active"); // "All"
-    } else if (gender === 0) {
-        document.querySelector("#genderFilter button:nth-child(2)").classList.add("active"); // "Men"
-    } else if (gender === 1) {
-        document.querySelector("#genderFilter button:nth-child(3)").classList.add("active"); // "Women"
-    }
+
 }
 
 
-// ???
+
 function shadeColor(color, percent) {
     let f = parseInt(color.slice(1), 16),
         t = percent < 0 ? 0 : 255,
-        p = Math.abs(percent) / 80, // 🔥 Increase darkening effect slightly
+        p = Math.abs(percent) / 60, // Darkening effect
         R = f >> 16,
         G = (f >> 8) & 0x00FF,
         B = f & 0x0000FF;
@@ -647,12 +1023,12 @@ function shadeColor(color, percent) {
 document.getElementById("toggleTableBtn").addEventListener("click", function() {
     const sidebar = document.getElementById("tableSidebar");
     if (sidebar.style.left === "0px") {
-        sidebar.style.left = "-300px"; // Hide sidebar
-        this.style.left = "10px"; // Move button back to original position
+        sidebar.style.left = "-530px"; // Hide sidebar
+        this.style.left = "80px"; // Move button back to original position
         this.textContent = "Expand Data";
     } else {
         sidebar.style.left = "0px"; // Show sidebar
-        this.style.left = "320px"; // Move button to the right so it's visible
+        this.style.left = "600px"; // Move button to the right so it's visible
         this.textContent = "Collapse Data";
     }
 });
