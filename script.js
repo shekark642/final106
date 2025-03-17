@@ -64,10 +64,10 @@ async function loadData() {
 
         // Categorize participants into age groups
         const ageGroups = {
-            "10-18": { count: 0, totalWeight: 0, totalHeight: 0, ids: [] },
-            "18-30": { count: 0, totalWeight: 0, totalHeight: 0, ids: [] },
-            "30-45": { count: 0, totalWeight: 0, totalHeight: 0, ids: [] },
-            "45-63": { count: 0, totalWeight: 0, totalHeight: 0, ids: [] },
+            "10-18": { count: 0, totalWeight: 0, totalHeight: 0, totalbmi: 0, ids: [] },
+            "18-30": { count: 0, totalWeight: 0, totalHeight: 0, totalbmi: 0, ids: [] },
+            "30-45": { count: 0, totalWeight: 0, totalHeight: 0, totalbmi: 0, ids: [] },
+            "45-63": { count: 0, totalWeight: 0, totalHeight: 0, totalbmi: 0, ids: [] },
         };
 
         rows.forEach(row => {
@@ -75,6 +75,7 @@ async function loadData() {
             const userID = row[idIndex]?.trim(); // Ensure ID is a string & not undefined
             const weight = parseFloat(row[weightIndex]);
             const height = parseFloat(row[heightIndex]);
+            const bmi = calculateBMI(weight, height);
 
 
 
@@ -88,6 +89,9 @@ async function loadData() {
                 ageGroups[group].count++;
                 ageGroups[group].totalWeight += weight;
                 ageGroups[group].totalHeight += height;
+                ageGroups[group].totalbmi += bmi;
+
+
 
                 // ✅ Ensure testID is stored for filtering
                 if (userID) {
@@ -102,10 +106,16 @@ async function loadData() {
         const labels = Object.keys(ageGroups);
         const dataValues = labels.map(group => ageGroups[group].count);
         const avgStats = labels.map(group => {
-            const { count, totalWeight, totalHeight } = ageGroups[group];
+            const { count, totalWeight, totalHeight, totalbmi } = ageGroups[group];
+            console.log(`Group: ${group}, Count: ${count}, Total Weight: ${totalWeight}, Total Height: ${totalHeight}, Total BMI: ${totalbmi}`);
+
             return count > 0
-                ? `Avg Weight: ${(totalWeight / count).toFixed(1)} kg\nAvg Height: ${(totalHeight / count).toFixed(1)} cm`
-                : "No Data";
+            ? [
+                `Avg Weight: ${(totalWeight / count).toFixed(1)} kg`,
+                `Avg Height: ${(totalHeight / count).toFixed(1)} cm`,
+                `Avg BMI: ${(totalbmi / count).toFixed(1)}`
+            ]
+            : "No Data";
         });
 
         // Render the chart
@@ -764,6 +774,7 @@ function renderVO2VCO2HRChart(filteredRows) {
     }
 
     let data = participantData[selectedParticipant];
+    console.log('particopant 1 data', data)
 
     // ✅ Sort by time
     data.sort((a, b) => a.time - b.time);
@@ -1186,10 +1197,10 @@ function applyFilters() {
     const ageGroups = {
         "All Ages": { count: window.originalRows.length, totalWeight: 0, totalHeight: 0, ids: [] },
 
-        "10-18": { count: 0, totalWeight: 0, totalHeight: 0, ids: [] },
-        "18-30": { count: 0, totalWeight: 0, totalHeight: 0, ids: [] },
-        "30-45": { count: 0, totalWeight: 0, totalHeight: 0, ids: [] },
-        "45-63": { count: 0, totalWeight: 0, totalHeight: 0, ids: [] },
+        "10-18": { count: 0, totalWeight: 0, totalHeight: 0, totalbmi: 0, ids: [] },
+        "18-30": { count: 0, totalWeight: 0, totalHeight: 0, totalbmi: 0, ids: [] },
+        "30-45": { count: 0, totalWeight: 0, totalHeight: 0, totalbmi: 0, ids: [] },
+        "45-63": { count: 0, totalWeight: 0, totalHeight: 0, totalbmi: 0, ids: [] },
     };
 
     window.originalRows.forEach(row => {
@@ -1198,6 +1209,10 @@ function applyFilters() {
         const height = parseFloat(row[window.header.indexOf("Height")]);
         const sex = parseInt(row[window.header.indexOf("Sex")]); // Gender column
         const userID = row[window.header.indexOf("ID")];
+        const bmi = calculateBMI(weight, height);
+
+        
+        ;
 
         // ✅ First, categorize by age
         let group = null;
@@ -1211,6 +1226,7 @@ function applyFilters() {
             ageGroups[group].count++;
             ageGroups[group].totalWeight += weight;
             ageGroups[group].totalHeight += height;
+            ageGroups[group].totalbmi += bmi;
             ageGroups[group].ids.push(userID);
         }
 
@@ -1222,10 +1238,14 @@ function applyFilters() {
     const labels = Object.keys(ageGroups).filter(label => label !== "All Ages"); // Exclude "All Ages" from pie chart
     const dataValues = labels.map(group => ageGroups[group].count);
     const avgStats = labels.map(group => {
-        const { count, totalWeight, totalHeight } = ageGroups[group];
+        const { count, totalWeight, totalHeight, totalbmi } = ageGroups[group];
         return count > 0
-            ? `Avg Weight: ${(totalWeight / count).toFixed(1)} kg\nAvg Height: ${(totalHeight / count).toFixed(1)} cm`
-            : "No Data";
+        ? [
+            `Avg Weight: ${(totalWeight / count).toFixed(1)} kg`,
+            `Avg Height: ${(totalHeight / count).toFixed(1)} cm`,
+            `Avg BMI: ${(totalbmi / count).toFixed(1)}`
+        ]
+        : "No Data";
     });
 
     // ✅ Render the updated chart
@@ -1271,10 +1291,10 @@ function filterByGender(gender) {
 
     // ✅ Now, categorize by age
     const ageGroups = {
-        "10-18": { count: 0, totalWeight: 0, totalHeight: 0, ids: [] },
-        "18-30": { count: 0, totalWeight: 0, totalHeight: 0, ids: [] },
-        "30-45": { count: 0, totalWeight: 0, totalHeight: 0, ids: [] },
-        "45-63": { count: 0, totalWeight: 0, totalHeight: 0, ids: [] },
+        "10-18": { count: 0, totalWeight: 0, totalHeight: 0, totalbmi: 0, ids: [] },
+        "18-30": { count: 0, totalWeight: 0, totalHeight: 0, totalbmi: 0, ids: [] },
+        "30-45": { count: 0, totalWeight: 0, totalHeight: 0, totalbmi: 0, ids: [] },
+        "45-63": { count: 0, totalWeight: 0, totalHeight: 0, totalbmi: 0, ids: [] },
     };
 
     let validIDs = [];
@@ -1283,6 +1303,7 @@ function filterByGender(gender) {
         const age = parseFloat(row[window.header.indexOf("Age")]);
         const weight = parseFloat(row[window.header.indexOf("Weight")]);
         const height = parseFloat(row[window.header.indexOf("Height")]);
+        const bmi = calculateBMI(weight, height);
         const userID = row[window.header.indexOf("ID")];
 
         let group = null;
@@ -1295,6 +1316,7 @@ function filterByGender(gender) {
             ageGroups[group].count++;
             ageGroups[group].totalWeight += weight;
             ageGroups[group].totalHeight += height;
+            ageGroups[group].totalbmi += bmi;
             ageGroups[group].ids.push(userID);
             validIDs.push(userID);
         }
@@ -1304,15 +1326,19 @@ function filterByGender(gender) {
     const labels = Object.keys(ageGroups);
     const dataValues = labels.map(group => ageGroups[group].count);
     const avgStats = labels.map(group => {
-        const { count, totalWeight, totalHeight } = ageGroups[group];
+        const { count, totalWeight, totalHeight, totalbmi } = ageGroups[group];
+        
         return count > 0
-            ? `Avg Weight: ${(totalWeight / count).toFixed(1)} kg\nAvg Height: ${(totalHeight / count).toFixed(1)} cm`
-            : "No Data";
+        ? [
+            `Avg Weight: ${(totalWeight / count).toFixed(1)} kg`,
+            `Avg Height: ${(totalHeight / count).toFixed(1)} cm`,
+            `Avg BMI: ${(totalbmi / count).toFixed(1)}`
+        ]
+        : "No Data";
     });
 
     // ✅ Render the pie chart with the filtered gender data
     renderChart(labels, dataValues, avgStats, ageGroups);
-
     // ✅ Reset selected age group to "All Ages"
     selectedAgeGroup = "All Ages";
 
@@ -1355,6 +1381,15 @@ function shadeColor(color, percent) {
         G = (f >> 8) & 0x00FF,
         B = f & 0x0000FF;
     return `rgb(${Math.round((t - R) * p + R)}, ${Math.round((t - G) * p + G)}, ${Math.round((t - B) * p + B)})`;
+}
+
+
+function calculateBMI(weight, height) {
+    if (isNaN(weight) || isNaN(height) || weight <= 0 || height <= 0) {
+        return 0;  // Return a default value if data is invalid
+    }
+    const heightInMeters = height / 100;  // Convert cm to meters
+    return weight / (heightInMeters * heightInMeters);  // BMI formula
 }
 
 
