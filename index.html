@@ -52,28 +52,39 @@
 
 
 <div id="main-content">
-    <h3>Writeup</h3>
-    <p>What I have done so far is create a basic template for how I want this site to look.
-        I have created the main page and the main visualization in which I want to expand into.
-        The main visualization I wan to create for the viewer is based on the pie chart.
-        Since right now, I cannot think of a innovative answer for an unknown question so far,
-        what I want to do is provide as much analysis on cardiovascular and respitory trends. 
-        I have the basic Layout right now of filtering through the dataset to analyze trends, 
-        but I want to do this more in depth and for a wider variety of trends.
+    <h1>Welcome!</h1>
+    <p>Hello everyone and welcome to my website! If you are here, it means one of two things. Either one, you are a goal-oriented athlete
+        looking to up their game and refine their fitness to become an even better athlete, capable of much greater things. Or two, you 
+        aren't an athlete looking to train, however, you know of such people so that after looking through, you can send this website to them.
+        Either is completely fine! Take a look through this website and click around on the buttons, but don't forget to learn and have fun! Thanks!
+    </p>
 
+    <p>
+        I was originally inspired to make this website because I used to be a national-level tennis player. I played across San Diego and 
+        California, and traveled far and wide to play tennis. Although after coming to college, my tennis career is somewhat over, I still like
+        to play with my friends, and I competitvely play on the UCSD Club Tennis team. I used to be a competitve athlete myself, and everyday used to go 
+        towards getting better.
+    </p>
+
+    <p>If you are an athlete, this website is perfect for you. Especially for more physically demanding sports, cardiovascular and repiratory fitness
+        are two crucial things for performance. They can make or break the sport for you, and we all know how important it is to have a strong Heart
+        and lungs. This website is a perfect place to start working on that. With the dataset I used, I have narrowed down and analyzed data from hundreds 
+        of people, to create a set of graphs and visualizations to personally help anyone with their journey. As I will explain over the course of this page,
+        what I hope you, as a viewer, will do, is try to personalize this website for yourself to create realistic goals for your cardiovascular and respiratory
+        health. This website is for you, so explore what other athletes similar to yourself can do!
     </p>
 
 
-    <p>I think one of the hardest things that I am going to have to overcome is the small
-        bugs that I will encounter throughout the process. Right now, one minor bug I am facing is
-        that the hover tool does not work on small line plots on the visualization. Right now, if the speed
-        data is not alone on the visualization, the hover tool does not work on it. I am also going to have to be 
-        creative with the analysis I want to do. Especially working alone, I think the time I will have to spend to
-        overcome these minor and potentially major bugs will be a lot. I will also have to spend time to be creative and 
-        format my website how I think will best provide insightful analysis to a viewer.
-
-
+    <h3>introduction</h3>
+    <p>
+        Here are the basics of what I am about to share with you. The dataset I analyzed consisted of hundreds of professional and amateur athletes,
+        all doing a treadmill max performance test. Each participant would go through a warmup period on the treadmill, then slowly ramp up speed. Then after
+        they were exhausted, they would slowly lower the speed as a cooldown period. Stats were measured throughout the test, and here is the analysis:
+        First, have a slice!
     </p>
+
+
+
 
 </div>
 
@@ -92,7 +103,7 @@
 </div>
 
 
-    <h2>Filtered Data Visualization</h2>
+    <h2>Filtered Data Visualizations:</h2>
     <div id="graphContainer">
         <canvas id="filteredChart"></canvas>
     </div>
@@ -100,23 +111,30 @@
 
 
 
+
     <div id="main-content">
-        <h3>Introduction</h3>
-        <p>Explore the effects of graded exercise on heart rate and oxygen consumption.
-            Explore the effects of graded exercise on heart rate and oxygen consumption.
-            Explore the effects of graded exercise on heart rate and oxygen consumption.
-            Explore the effects of graded exercise on heart rate and oxygen consumption.
-    
-    
-            Explore the effects of graded exercise on heart rate and oxygen consumption.</p>
+    <p>
+        Lets start off with something simple. From what we can see here, we can make a few conclusions:
+    </p>
+    <ul>
+        <li>Average trend of speed and heart is to go up and down. This makes sense due to the nature of the treadmill test. 
+            People went fast and then slow.</li>
+        <li>The average time to tap out was around 800-900 seconds. 15 minutes of high intensity training was enough for these athletes, 
+            however, they were still able to do a cooldown, which means they were exhausted but not too exhausted
+        </li>
+        <li>At the end, things got a little messy. This is a trend we will see a lot, but when you're heart rate is high and blood is pumping,
+            people can be very different. As we can see, in the beginning, averages look pretty normal and clustered together, but later on,
+            they fluctuate greatly. This is due to each person being different, however the scale of difference between the participants is 
+            seen much more towards the end of a run, especially as an older person.
+        </li>
+      </ul>
+      The trends I will point out are common trends, however you may not see them as much depending on the filter you choose to apply
+      Feel free to explore many different settings. I am here as an aid, to guide you through what you should be looking for, and what you may find,
+      however, you may see different things as you explore different filters.
     </div>
 
 
-    <div id="main-content">
-    <div id="text-container">
-        <p id="dynamic-text">This is the default text for all.</p>
-    </div>
-    </div>
+
 
 
     <div id="graphContainer">
@@ -124,72 +142,159 @@
     </div>
 
 
+    <div id="main-content">
+        <p>Now let's take a look at a different metric. This graph is about CO2 output and O2 input. The main thing we want to 
+            look for here is when the two lines intersect. We start with VO2 being on top and VCO2 being on the bottom. This makes sense as 
+            we are normally breathing more oxygen in than exhaling carbon dioxide. As the run progresses, you breathe more oxygen in and produce more carbon dioxide.
+            This keeps going and soon you are producing more carbon dioxide than you can breathe in oxygen. This of course slows down after maximal effort.
+            
+            Comparing this graph about CO2 and O2 to the previous graph, we see some more
+            interesting things:
+        </p>
+        <ul>
+            <li>The intersection period is very important, we can see that very shortly after this intersection period, the 
+                participant reaches exhaustion and starts cooling down. Producing more CO2 and breathing in O2 is a bad sign.
+            </li>
+            <li>These two are very related. When one goes down, the other goes down in a very similar fashion, and vice versa.</li>
+            <li>VO2 and O2 are very stable metrics. Shortly after the run ends, these levels go back to normal. </li>
+          </ul>
+    </div>
+
+
+
+
+    <div id="graphContainer">
+        <canvas id="averageVEGraph"></canvas>
+    </div>
+
+    <div id="main-content">
+        <p>
+            Lets look at Pulmonary Ventilation, which is the movement of air into and out of the lungs. This is another standard metric that follows the 
+            trend of increasing during the max of the run and then goes down. This is a little bit unique because this metric is very peak oriented.
+            VE increases up to a sharp peak and then linearly goes back down to normal levels
+        </p>
+    </div>
+
+    
+
+
+
+    <div id="main-content">
+        <div id="text-container">
+            <h3>Gender Specific Info:</h3>
+            <p id="dynamic-text">Apart from age, gender plays a huge role in athletic performace. 
+                Women and Men are physiologically very different, so its important to remember the differences.</p>
+        </div>
+        </div>
+
+
 
 
     <div id="multiGraphContainer">
         <div class="graph-container2">
-            <h3>Participant 1</h3>
+            <h3></h3>
             <canvas id="vo2Vco2HRChart"></canvas>
         </div>
         <div class="graph-container2">
-            <h3>Participant 2</h3>
+            <h3></h3>
             <canvas id="vo2Vco2HRChartSecond"></canvas>
         </div>
         <div class="graph-container2">
-            <h3>Participant 3</h3>
+            <h3></h3>
             <canvas id="vo2Vco2HRChartThird"></canvas>
         </div>
         <div class="graph-container2">
-            <h3>Participant 4</h3>
+            <h3></h3>
             <canvas id="vo2Vco2HRChartFourth"></canvas>
         </div>
     </div>
 
 
     <div id="main-content">
-        <h3>Introduction</h3>
-        <p>Explore the effects of graded exercise on heart rate and oxygen consumption.
-            Explore the effects of graded exercise on heart rate and oxygen consumption.
-            Explore the effects of graded exercise on heart rate and oxygen consumption.
-            Explore the effects of graded exercise on heart rate and oxygen consumption.
-    
-    
-            Explore the effects of graded exercise on heart rate and oxygen consumption.</p>
+        <p>Now Lets take a look at BMI. We will analyze VO2/HR and VCO2/HR data for 4 different participants of each group.
+            This metric is important because it shows what a good amount of oxygen and carbon dioxide to have in your system. Of course, it 
+            is much healthier to have a lower BMI. There are exceptions like having a lot of muscle mass, which can raise your bmi and incorrectly determine
+            you are unhealthy. What can be seen is that the y values for lower bmi athletes are lower. They do not need as much O2 to run, and produce less CO2. 
+            These 2 values are more muted as they do not fluctuate in the y direction is much, but the overall y value is very imporant as well.
+
+        </p>
+    </div>
+
+    <div id="main-content">
+        <h1>The Cardiovascular and Respiratory System</h1>
     </div>
 
 
 
 
-    <label for="speed">Animation Speed:</label>
+    <label for="speed">Intensity level:</label>
     <input type="range" id="speed" min="1" max="10" value="5">
-
+    <span id="heartbeat"><br>Heartbeat: 0<br>
+    </span>  <!-- This is where the value will be displayed -->
+    <label>
+      <input type="checkbox" id="o2Deficiency"> When you are exhausted:
+    </label>
+    
     <div id="container">
         <svg id="diagram" viewBox="0 0 600 600">
+
+            
             <!-- Mouth -->
-            <rect id="mouth" x="285" y="30" width="30" height="15" fill="#FFC0CB" stroke="#000" stroke-width="1"/>
+            <image id="mouth" x="182" y="-10" width="240" height="120" href="open-mouth-removebg.png" transform="translate(100,100)">
+                <title>
+                    <!-- Tooltip for captions -->
+
+
+                    In the respiratory system, the mouth serves as a secondary pathway for air to enter and exit the body, 
+                    complementing the nasal passages, especially during times of heavy breathing.</title>
+            </image>
+
 
             <!-- Airways -->
-            <path id="airway" d="M300,45 L300,100" stroke="black" stroke-width="5" fill="none"/>
+            <path id="airway" d="M300,45 L300,100" stroke="black" stroke-width="5" fill="none">
+                <title>
+                    In the respiratory system, the throat (specifically the pharynx and larynx) 
+                    acts as a shared passageway for both air and food, directing air to the lungs</title>
+            </path>
 
             <!-- Lungs -->
-            <ellipse id="left-lung" cx="250" cy="150" rx="55" ry="75" fill="url(#lungGradient)" stroke="black" stroke-width="2"/>
-            <ellipse id="right-lung" cx="350" cy="150" rx="55" ry="75" fill="url(#lungGradient)" stroke="black" stroke-width="2"/>
+            <image id="lungs" href="lungs-image.png" width="200" height="200">
+                <title>The lungs, part of the respiratory system, facilitate breathing by enabling gas exchange: 
+                    taking in oxygen from inhaled air and releasing carbon dioxide, a waste product, during exhalation. </title>
+            </image>
+
+            <!-- Airflow Path (Particles will follow this path) -->
+            <path id="airwayPathLeft" d="M280,300 L280,200 L300,100" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="3">
+                <title>C02 coming up to be exhaled.</title>
+            </path>
+            <path id="airwayPathRight" d="M300,100 L320,200 L320,300" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="3">
+                <title>Oxygen coming in to be circulated.</title>
+            </path>
+            <g id="particlesContainerLeft"></g>
+            <g id="particlesContainerRight"></g>
 
             <!-- Heart -->
-            <path id="heart" fill="url(#heartGradient)" stroke="black" stroke-width="2"
-                d="M300 250 
+            <path id="heart" fill="url(#heartGradient)" stroke="black" stroke-width="2" d="M300 250 
                 Q280 220 260 250 
                 Q250 270 300 310 
                 Q350 270 340 250 
-                Q320 220 300 250 Z"/>
+                Q320 220 300 250 Z">
+                <title>The heart acts as the central pump in the circulatory system, propelling blood throughout the body to deliver 
+                    oxygen and nutrients and remove waste products, while also regulating blood pressure and heart rate. 
+                </title>
+            </path>
 
             <!-- Arteries (red) -->
-            <path id="arteries" stroke="red" stroke-width="6" fill="none"
-                d="M300,290 Q380,360 300,430 Q220,360 300,290"/>
+            <path id="arteries" stroke="red" stroke-width="6" fill="none" d="M300,290 Q380,360 300,430 Q220,360 300,290">
+                <title>Arteries are blood vessels that carry oxygen-rich blood away from the heart to the rest of the body. </title>
+            </path>
 
             <!-- Veins (blue) -->
-            <path id="veins" stroke="blue" stroke-width="6" fill="none"
-                d="M300,310 Q370,360 300,410 Q230,360 300,310"/>
+            <path id="veins" stroke="blue" stroke-width="6" fill="none" d="M300,310 Q370,360 300,410 Q230,360 300,310">
+                <title>Veins are blood vessels that carry blood back to the heart, primarily carrying deoxygenated blood from the body's 
+                    tissues, except for the pulmonary veins which carry oxygenated blood from the lungs. 
+                </title>
+            </path>
 
             <!-- Oxygen particle -->
             <circle id="oxygen" r="5" fill="lightblue"/>
@@ -214,8 +319,46 @@
                     <stop offset="100%" stop-color="#b30000"/>
                 </radialGradient>
             </defs>
+            
+
+            <!-- First Yellow Spiky Squiggle (Thicker and Darker Yellow) -->
+            <path id="squiggle1" fill="none" stroke="#cc9900" stroke-width="8" 
+                  d="M250 310 Q260 330 270 320 Q280 310 290 330 Q300 320 310 310">
+                <title>During intense exercise when oxygen is limited, your body produces lactic 
+                    acid as a byproduct of energy production, leading to muscle fatigue and the sensation of burning. </title>
+            </path>
+        
+            <!-- Second Yellow Spiky Squiggle (Thicker and Darker Yellow) -->
+            <path id="squiggle2" fill="none" stroke="#cc9900" stroke-width="8" 
+                  d="M270 320 Q280 340 290 330 Q300 320 310 340 Q320 330 330 320">
+                <title>During intense exercise when oxygen is limited, your body produces lactic acid as a byproduct of energy production, 
+                    leading to muscle fatigue and the sensation of burning. </title>
+            </path>
+
         </svg>
     </div>
+
+    
+    <div id="main-content">
+        <h3>Conclusion</h3>
+        <P>
+            What I hope to have shown you through this visual experience, is that although everyone is difference, we still have control over 
+            our bodies. For athletes, we have the drive to push ourselves towards the finish line of being the most athletic and fit people possible,
+            but even for those who aren't, you still have the opportunity to improve your health and fitness. With this huge dataset, I combined facts about fitness
+            with real data. Through the personally fitted analysis and trends I provided you today, and I hope to have provided you some kind of goal, whether it be motivation or information to help you train
+            better, that you can carry with youself.
+
+        </P>
+
+        <P>
+            Thanks for visiting my website!
+            &#128512;	
+
+
+        </P>
+    </div>
+
+
     
 <!--
     

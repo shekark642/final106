@@ -26,7 +26,7 @@ canvas {
     top: 0;
     left: 0;
     width: 100%;
-    background: rgba(255, 255, 255, 0.9); /* Light background */
+    background: rgba(157, 216, 239, 0.9); /* Light background */
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2); /* Adds shadow */
     text-align: center;
     padding: 15px 0;
@@ -153,9 +153,9 @@ h2 {
 /* Sidebar Styles */
 #tableSidebar {
     position: fixed;
-    left: -530px; /* Start off-screen */
+    left: -674px; /* Start off-screen */
     top: 163px; /* Adjust this if your navbar is taller */
-    width: 600px;
+    width: 728px;
     height: calc(100% - 50px); /* Make sure it doesn't go under the navbar */
     background: white;
     padding: 15px;
@@ -265,6 +265,12 @@ h2 {
     display: block;
 }
 
+#averageVEGraph {
+    width: 100% !important;
+    height: 500px !important; /* Adjust height as needed */
+    display: block;
+}
+
 #individualRRChart {
     width: 280% !important;
     height: 300px !important; /* Adjust height as needed */
@@ -333,6 +339,36 @@ h2 {
     margin-bottom: 20px;
 }
 
+
+
+
+
+
+
+
+
+/* AFTER HERE IS THE ANIMATION */
+
+#lungs {
+    transform-origin: center; /* Keeps the image centered */
+}
+
+
+
+#container {
+    margin: auto;
+    height: 330px;
+    width: 400px;
+    border: 3px solid #003366;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    padding: 10px;
+}
+
+#speed {
+    width: 300px;
+    margin-bottom: 20px;
+}
+
 /* Heartbeat Animation */
 @keyframes heartbeat {
     0% { transform: scale(1); }
@@ -341,8 +377,11 @@ h2 {
 }
 
 #heart {
-    animation: heartbeat 1s infinite;
+    animation: heartbeat 1s infinite ease-in-out;
+    transform-origin: center;
+    cursor: pointer;
 }
+
 
 /* Lung Breathing Animation */
 @keyframes breathing {
@@ -350,7 +389,26 @@ h2 {
     50% { transform: scale(1.05); }
     100% { transform: scale(1); }
 }
+@keyframes breathingEightX {
+    0% { transform: scale(1*8); }
+    50% { transform: scale(1.05*8); }
+    100% { transform: scale(1*8); }
+}
 
-#left-lung, #right-lung {
+#lungs {
     animation: breathing 2s infinite;
+}
+
+.tooltip {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 5px;
+    font-size: 14px;
+    display: none; /* Hidden by default */
+    pointer-events: none; /* Avoid interfering with mouse events */
+    z-index: 1000;
+    max-width: 250px;
+    white-space: normal;
 }
